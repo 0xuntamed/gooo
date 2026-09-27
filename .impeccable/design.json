@@ -1,0 +1,429 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-27T15:21:55.892567+00:00",
+  "title": "Design System: The Go Machine",
+  "extensions": {
+    "colorMeta": {
+      "substrate": {
+        "role": "neutral",
+        "displayName": "Silicon Substrate",
+        "canonical": "#11132a",
+        "tonalRamp": [
+          "#161936",
+          "#25295b",
+          "#33397f",
+          "#424aa3",
+          "#676ec1",
+          "#9297d3",
+          "#bec1e5",
+          "#e6e7f5"
+        ]
+      },
+      "substrate-2": {
+        "role": "neutral",
+        "displayName": "Block Interior",
+        "canonical": "#171a35",
+        "tonalRamp": [
+          "#171a35",
+          "#272c59",
+          "#363d7c",
+          "#454fa0",
+          "#6a72be",
+          "#949ad1",
+          "#bfc3e3",
+          "#e6e8f4"
+        ]
+      },
+      "substrate-3": {
+        "role": "neutral",
+        "displayName": "Lifted Plane",
+        "canonical": "#1f2346",
+        "tonalRamp": [
+          "#171b35",
+          "#272c58",
+          "#373e7c",
+          "#46509f",
+          "#6b73bd",
+          "#959bd0",
+          "#bfc3e3",
+          "#e6e8f4"
+        ]
+      },
+      "substrate-4": {
+        "role": "neutral",
+        "displayName": "Deep Rail",
+        "canonical": "#2a2f5c",
+        "tonalRamp": [
+          "#181b35",
+          "#282d58",
+          "#383f7b",
+          "#48509e",
+          "#6c74bc",
+          "#969ccf",
+          "#c0c3e2",
+          "#e6e8f4"
+        ]
+      },
+      "console": {
+        "role": "neutral",
+        "displayName": "Console Black",
+        "canonical": "#0e1024",
+        "tonalRamp": [
+          "#151837",
+          "#24295c",
+          "#323981",
+          "#4049a5",
+          "#656dc3",
+          "#9197d4",
+          "#bdc1e5",
+          "#e5e7f5"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ivory Ink",
+        "canonical": "#ece9f5",
+        "tonalRamp": [
+          "#1f1835",
+          "#342858",
+          "#49387b",
+          "#5d489e",
+          "#806cbc",
+          "#a496cf",
+          "#c8c0e2",
+          "#eae6f4"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#c3bfdb",
+        "tonalRamp": [
+          "#1f1c31",
+          "#332e52",
+          "#474072",
+          "#5c5393",
+          "#7e76b2",
+          "#a39dc8",
+          "#c8c4de",
+          "#eae8f2"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Annotation Ink",
+        "canonical": "#948fb4",
+        "tonalRamp": [
+          "#211f2e",
+          "#37334c",
+          "#4c486b",
+          "#625c89",
+          "#847fa9",
+          "#a7a3c2",
+          "#cac8da",
+          "#ebeaf1"
+        ]
+      },
+      "copper": {
+        "role": "primary",
+        "displayName": "Copper Metal",
+        "canonical": "#e78b52",
+        "tonalRamp": [
+          "#431f09",
+          "#703410",
+          "#9d4916",
+          "#ca5e1c",
+          "#e58143",
+          "#eca579",
+          "#f4c9ae",
+          "#fbeae0"
+        ]
+      },
+      "teal": {
+        "role": "secondary",
+        "displayName": "Teal Interconnect",
+        "canonical": "#3fc6b4",
+        "tonalRamp": [
+          "#123b35",
+          "#1d6259",
+          "#298a7d",
+          "#35b1a0",
+          "#5acebe",
+          "#89dcd1",
+          "#b8eae3",
+          "#e3f7f4"
+        ]
+      },
+      "rose": {
+        "role": "tertiary",
+        "displayName": "Rose Poly",
+        "canonical": "#f0607c",
+        "tonalRamp": [
+          "#460713",
+          "#750b20",
+          "#a30f2c",
+          "#d21439",
+          "#ed3b5e",
+          "#f2738c",
+          "#f7abba",
+          "#fcdee4"
+        ]
+      },
+      "violet": {
+        "role": "tertiary",
+        "displayName": "Violet Well",
+        "canonical": "#a493f4",
+        "tonalRamp": [
+          "#120745",
+          "#1e0c74",
+          "#2a10a2",
+          "#3615d0",
+          "#5b3deb",
+          "#8a74f1",
+          "#b9acf7",
+          "#e4dffc"
+        ]
+      },
+      "pad-gold": {
+        "role": "tertiary",
+        "displayName": "Bond-Pad Gold",
+        "canonical": "#c4a060",
+        "tonalRamp": [
+          "#382b15",
+          "#5d4823",
+          "#826530",
+          "#a7813e",
+          "#c5a263",
+          "#d6bc8f",
+          "#e6d7bc",
+          "#f5efe5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "marking": {
+        "displayName": "Die marking",
+        "purpose": "Site name and region names; identity, never prose."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Chapter titles from sm."
+      },
+      "headline-lg": {
+        "displayName": "Headline, large",
+        "purpose": "Home section heads from md."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section heads; chapter titles on phones."
+      },
+      "headline-sm": {
+        "displayName": "Headline, small",
+        "purpose": "Section heads on phones; the next-block link."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Scroll-step and inspector titles."
+      },
+      "title-sm": {
+        "displayName": "Title, small",
+        "purpose": "Index rows, panel heads, chapter subtitles on phones."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, held to a 34rem column; 16px on phones."
+      },
+      "body-sm": {
+        "displayName": "Body, small",
+        "purpose": "Body on phones."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Readouts and secondary prose."
+      },
+      "ui": {
+        "displayName": "UI",
+        "purpose": "Lists, tables, controls."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Listings, runtime identifiers."
+      },
+      "code-sm": {
+        "displayName": "Code, small",
+        "purpose": "Dense listings and captions."
+      },
+      "label": {
+        "displayName": "Instrument label",
+        "purpose": "Clock, capture and trace labels only."
+      },
+      "annotation": {
+        "displayName": "Annotation",
+        "purpose": "Labels inside diagrams."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Cell indices and offsets inside diagrams."
+      }
+    },
+    "shadows": [
+      {
+        "name": "menu-drop",
+        "value": "0 18px 40px -18px #000000cc",
+        "purpose": "The floorplan menu only; everything else is flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every state transition and layout flight."
+      },
+      {
+        "name": "descent",
+        "value": "cubic-bezier(0.76, 0, 0.18, 1) 850ms",
+        "purpose": "The camera zoom from the die into a block."
+      },
+      {
+        "name": "chip-spring",
+        "value": "spring(stiffness 260, damping 30)",
+        "purpose": "Goroutines moving between queues."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Pad",
+      "kind": "button",
+      "refersTo": "pad",
+      "description": "Every control is a bond pad, where input enters the chip.",
+      "html": "<button class=\"ds-pad\"><i></i>Insert a key</button>",
+      "css": ".ds-pad{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #ece9f538;border-radius:3px;background:#171a35;color:#ece9f5;font:700 13px/1 'Atkinson Hyperlegible Next',system-ui,sans-serif;cursor:pointer;transition:background-color .15s cubic-bezier(.16,1,.3,1),border-color .15s cubic-bezier(.16,1,.3,1),transform .15s}.ds-pad i{width:7px;height:7px;border:1px solid #c4a060b3;background:#c4a06033;border-radius:1px;transition:background-color .15s,border-color .15s}.ds-pad:hover{background:#1f2346;border-color:#3fc6b4b3}.ds-pad:hover i{border-color:#3fc6b4;background:#3fc6b499}.ds-pad:focus-visible{outline:2px solid #3fc6b4;outline-offset:3px}.ds-pad:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Primary Pad",
+      "kind": "button",
+      "refersTo": "pad-primary",
+      "description": "The one main action in a row.",
+      "html": "<button class=\"ds-pad ds-pad-primary\"><i></i>Start at block 01</button>",
+      "css": ".ds-pad{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #ece9f538;border-radius:3px;background:#171a35;color:#ece9f5;font:700 13px/1 'Atkinson Hyperlegible Next',system-ui,sans-serif;cursor:pointer;transition:background-color .15s cubic-bezier(.16,1,.3,1),border-color .15s cubic-bezier(.16,1,.3,1),transform .15s}.ds-pad i{width:7px;height:7px;border:1px solid #c4a060b3;background:#c4a06033;border-radius:1px;transition:background-color .15s,border-color .15s}.ds-pad:hover{background:#1f2346;border-color:#3fc6b4b3}.ds-pad:hover i{border-color:#3fc6b4;background:#3fc6b499}.ds-pad:focus-visible{outline:2px solid #3fc6b4;outline-offset:3px}.ds-pad:active{transform:translateY(1px)}.ds-pad-primary{border-color:#e78b52cc;background:#e78b5226}.ds-pad-primary i{background:#e78b5299;border-color:#e78b52}.ds-pad-primary:hover{background:#e78b5240;border-color:#e78b52}"
+    },
+    {
+      "name": "Code Pad",
+      "kind": "button",
+      "refersTo": "pad",
+      "description": "A control whose label is a line of Go.",
+      "html": "<button class=\"ds-pad ds-pad-code\"><i></i>t := s[1:3:3]</button>",
+      "css": ".ds-pad{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid #ece9f538;border-radius:3px;background:#171a35;color:#ece9f5;font:700 13px/1 'Atkinson Hyperlegible Next',system-ui,sans-serif;cursor:pointer;transition:background-color .15s cubic-bezier(.16,1,.3,1),border-color .15s cubic-bezier(.16,1,.3,1),transform .15s}.ds-pad i{width:7px;height:7px;border:1px solid #c4a060b3;background:#c4a06033;border-radius:1px;transition:background-color .15s,border-color .15s}.ds-pad:hover{background:#1f2346;border-color:#3fc6b4b3}.ds-pad:hover i{border-color:#3fc6b4;background:#3fc6b499}.ds-pad:focus-visible{outline:2px solid #3fc6b4;outline-offset:3px}.ds-pad:active{transform:translateY(1px)}.ds-pad-code{font:400 12.5px/1 'Martian Mono',ui-monospace,monospace;font-variation-settings:'wdth' 82}"
+    },
+    {
+      "name": "Dial",
+      "kind": "input",
+      "refersTo": "pad",
+      "description": "A labelled range input: GOMAXPROCS, GOGC, speed, channel cap.",
+      "html": "<label class=\"ds-dial\"><span>GOGC</span><input type=\"range\" min=\"25\" max=\"400\" value=\"100\"><output>100</output></label>",
+      "css": ".ds-dial{display:inline-flex;align-items:center;gap:12px;height:36px;padding:0 12px;border:1px solid #ece9f538;border-radius:3px;background:#171a35}.ds-dial span{font:400 11px/1 'Martian Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#948fb4}.ds-dial input{width:96px;accent-color:#e78b52}.ds-dial output{font:600 13px/1 'Martian Mono',monospace;color:#e78b52;min-width:3ch;text-align:right}"
+    },
+    {
+      "name": "Clock strip",
+      "kind": "nav",
+      "refersTo": "stage-frame",
+      "description": "One square per scroll step above every stage: copper now, teal done, hollow to come.",
+      "html": "<div class=\"ds-clock\"><b class=\"d\"></b><b class=\"d\"></b><b class=\"n\"></b><b></b><b></b><em>T02 append writes through</em></div>",
+      "css": ".ds-clock{display:flex;align-items:center;gap:3px}.ds-clock b{width:12px;height:12px;border:1px solid #ece9f538;border-radius:1px}.ds-clock b.d{background:#3fc6b459;border-color:#3fc6b499}.ds-clock b.n{background:#e78b52;border-color:#e78b52}.ds-clock em{margin-left:10px;font:400 12px/1 'Martian Mono',monospace;font-style:normal;color:#c3bfdb}"
+    },
+    {
+      "name": "Layer chip",
+      "kind": "chip",
+      "refersTo": "stage-frame",
+      "description": "A goroutine or value on the stage, drawn in its layer's hatch.",
+      "html": "<span class=\"ds-chip ds-run\">G9</span> <span class=\"ds-chip ds-q\">G14</span> <span class=\"ds-chip ds-park\">G2</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;justify-content:center;height:24px;min-width:42px;padding:0 4px;border:1px solid;border-radius:2px;font:400 11.5px/1 'Martian Mono',monospace;color:#ece9f5}.ds-run{border-color:#e78b52;background:#e78b5229 repeating-linear-gradient(45deg,#e78b5294 0 1px,transparent 1px 5px)}.ds-q{border-color:#3fc6b4cc;background:#3fc6b424 repeating-linear-gradient(-45deg,#3fc6b48c 0 1px,transparent 1px 5px)}.ds-park{border-color:#a493f4cc;background-color:#a493f421;background-image:radial-gradient(circle,#a493f4bf .9px,transparent 1.3px);background-size:5px 5px}"
+    },
+    {
+      "name": "Stage frame",
+      "kind": "card",
+      "refersTo": "stage-frame",
+      "description": "The block under the microscope: crop marks, cell rows, block name.",
+      "html": "<div class=\"ds-stage\"><span class=\"c tl\"></span><span class=\"c br\"></span><small>SRAM row + header register · runtime/slice.go</small></div>",
+      "css": ".ds-stage{position:relative;height:160px;border:1px solid #ece9f538;border-radius:4px;background:#171a35 repeating-linear-gradient(180deg,#ece9f509 0 1px,transparent 1px 13px,#ece9f504 13px 14px,transparent 14px 28px)}.ds-stage .c{position:absolute;width:10px;height:10px;border-color:#948fb499;border-style:solid}.ds-stage .tl{left:6px;top:6px;border-width:1px 0 0 1px}.ds-stage .br{right:6px;bottom:6px;border-width:0 1px 1px 0}.ds-stage small{position:absolute;right:14px;bottom:8px;font:400 10px/1 'Martian Mono',monospace;color:#948fb4b3}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Die Shot",
+    "overview": "The whole site is one chip under a microscope. The home page is the die itself: a seal ring, a perimeter of bond pads, and thirteen functional blocks, each drawn in its own layout grammar (maps as control-word SRAM banks, the scheduler as cores, strings as read-only bytes). Every chapter is one of those blocks at higher magnification, and every drawing inside it is built from the same small set of layers laid over a violet-black substrate.\n\nNothing is decoration. Motion only ever shows the mechanism moving: a goroutine flying from a run queue to a P, a token becoming a tree node, a value crossing from a sender's stack to a receiver's. The same piece of \"matter\" keeps its identity from one state to the next, and animates between them rather than cross-fading. Density is high, like a real die, but every region is labelled with the runtime name it stands for.",
+    "keyCharacteristics": [
+      "A dark silicon substrate ground, chosen for long reading beside a dark editor.",
+      "A five-layer hatch language that encodes meaning by hue *and* pattern.",
+      "Extended die-marking capitals for identity, a hyper-legible face for prose, a width-variable mono for code and data.",
+      "Hairline rectangles with 2–4px corners, crop marks and bond pads, never soft cards.",
+      "Motion as the explanation: layout flights, path draws and pulses, all ease-out-expo."
+    ],
+    "rules": [
+      {
+        "name": "The Layer Means One Thing Rule",
+        "body": "Copper is always a value or the running thing. Teal is always a pointer or the waiting thing. Rose is always heap, danger or a stopped world. Violet is always parked. Never use a layer colour for decoration or emphasis that breaks its meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hatch Carries It Too Rule",
+        "body": "State is encoded by pattern as well as hue: copper 45° hatch, teal −45° hatch, rose horizontal hatch, violet dots, cross-hatch for padding and free space. A drawing must stay readable in greyscale.",
+        "section": "colors"
+      },
+      {
+        "name": "The Solid Is Measured Rule",
+        "body": "A solid line marks a value measured on go1.26.2. A dashed line marks a simulated or scaled-down value, and the real value must be stated beside it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Is Data Rule",
+        "body": "Monospace is for code, runtime identifiers, addresses and measurements. A heading or a sentence is never set in mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Fixed Measure Rule",
+        "body": "Prose never runs wider than 34rem. The live diagram owns the rest of the viewport.",
+        "section": "typography"
+      },
+      {
+        "name": "The Ladder Rule",
+        "body": "Every size is a rung: 9–17px in whole pixels, and headings in the rem steps above. Nothing is set at a half pixel, and nothing below 9px.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Die Rule",
+        "body": "Surfaces are flat. Hierarchy comes from tone, border weight and hatch density, not from shadows or glows. Nothing glows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** draw every mechanism from the five layers, with hatch and hue together.",
+      "**Do** give each piece of matter (a goroutine, a token, a value) one identity and animate it between states (`layoutId`), scoped with its own `LayoutGroup` id per stage.",
+      "**Do** label every block and region with the real runtime name it stands for.",
+      "**Do** mark measured values solid and simulated values dashed, with the real value stated.",
+      "**Do** keep ease-out-expo (`cubic-bezier(0.16, 1, 0.3, 1)`) for every transition and respect `prefers-reduced-motion`."
+    ],
+    "donts": [
+      "**Don't** add motion that does not show the mechanism: no floating shapes, no parallax, no ambient loops. The one ambient loop is the live scheduler, and it is the real engine.",
+      "**Don't** make it cartoonish: no mascots, no bouncy toy easing.",
+      "**Don't** use shadows, glows or gradient text for emphasis.",
+      "**Don't** set headings or prose in monospace.",
+      "**Don't** put a kicker or eyebrow above a heading. A chapter number sits inline, in the heading.",
+      "**Don't** replace a captured value with a rounder or invented one."
+    ]
+  }
+}

@@ -1,0 +1,196 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   THE GO MACHINE: die-shot world
+   Ground is the silicon substrate. Every structure is drawn as a
+   layer on it, and a layer means one thing everywhere:
+     copper  (metal 1)  values, data, the thing running
+     teal    (metal 2)  pointers, headers, interconnect, queued
+     rose    (poly)     heap, escape, danger, syscall
+     violet  (well)     parked, waiting
+     fill    (filler)   padding, free, unused
+   State is always carried by the hatch as well as the hue.
+   ───────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-substrate: #11132a;
+  --color-substrate-2: #171a35;
+  --color-substrate-3: #1f2346;
+  --color-substrate-4: #2a2f5c;
+  --color-line: #ece9f51f;
+  --color-line-2: #ece9f538;
+  --color-ink: #ece9f5;
+  --color-ink-2: #c3bfdb;
+  --color-ink-3: #948fb4;
+  --color-copper: #e78b52;
+  --color-copper-deep: #b8622d;
+  --color-teal: #3fc6b4;
+  --color-teal-deep: #1f8f81;
+  --color-rose: #f0607c;
+  --color-violet: #a493f4;
+  --color-pad: #c4a060;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@theme inline {
+  --font-display: var(--font-encode), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-martian), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ── base ─────────────────────────────────────────────────── */
+
+html {
+  color-scheme: dark;
+  background: var(--color-substrate);
+  scroll-behavior: smooth;
+  scrollbar-color: var(--color-substrate-4) var(--color-substrate);
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  background: var(--color-substrate);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  caret-color: var(--color-teal);
+  text-rendering: optimizeLegibility;
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+}
+
+::selection { background: var(--color-copper); color: var(--color-substrate); }
+
+:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-substrate); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-substrate-4);
+  border: 2px solid var(--color-substrate);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: #3a4079; }
+
+h1, h2, h3, h4 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+a { text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+
+code, kbd, samp, pre { font-family: var(--font-mono); }
+
+/* Tabular figures anywhere numbers are compared */
+.tnum { font-variant-numeric: tabular-nums slashed-zero; }
+
+/* ── type roles ───────────────────────────────────────────── */
+
+/* die marking: extended caps, the way a mask label is etched */
+.marking {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+}
+.display {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+}
+.label {
+  font-family: var(--font-mono);
+  font-variation-settings: "wdth" 100;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.mono-tight { font-variation-settings: "wdth" 82; }
+.mono-wide { font-variation-settings: "wdth" 112.5; }
+
+/* inline code inside prose */
+.prose code {
+  font-size: 0.86em;
+  font-variation-settings: "wdth" 88;
+  color: var(--color-ink);
+  background: var(--color-substrate-3);
+  padding: 0.08em 0.36em;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.prose strong { color: var(--color-ink); font-weight: 700; }
+.prose em { color: var(--color-ink); }
+.prose p + p { margin-top: 0.9em; }
+.prose a { color: var(--color-teal); text-decoration-color: color-mix(in oklab, var(--color-teal) 50%, transparent); }
+
+/* ── layers: hatch fills ──────────────────────────────────── */
+
+.hatch-copper {
+  background-color: color-mix(in oklab, var(--color-copper) 16%, transparent);
+  background-image: repeating-linear-gradient(45deg, color-mix(in oklab, var(--color-copper) 58%, transparent) 0 1px, transparent 1px 5px);
+}
+.hatch-teal {
+  background-color: color-mix(in oklab, var(--color-teal) 14%, transparent);
+  background-image: repeating-linear-gradient(-45deg, color-mix(in oklab, var(--color-teal) 55%, transparent) 0 1px, transparent 1px 5px);
+}
+.hatch-rose {
+  background-color: color-mix(in oklab, var(--color-rose) 15%, transparent);
+  background-image: repeating-linear-gradient(0deg, color-mix(in oklab, var(--color-rose) 55%, transparent) 0 1px, transparent 1px 4px);
+}
+.hatch-violet {
+  background-color: color-mix(in oklab, var(--color-violet) 13%, transparent);
+  background-image: radial-gradient(circle, color-mix(in oklab, var(--color-violet) 75%, transparent) 0.9px, transparent 1.3px);
+  background-size: 5px 5px;
+}
+.hatch-fill {
+  background-image:
+    repeating-linear-gradient(45deg, #ece9f514 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-45deg, #ece9f514 0 1px, transparent 1px 6px);
+}
+.hatch-ivory {
+  background-color: #ece9f514;
+  background-image: repeating-linear-gradient(45deg, #ece9f54d 0 1px, transparent 1px 5px);
+}
+
+/* the substrate itself: standard-cell rows between power rails, as on a die.
+   Horizontal only, because that is how cells are placed; alternate rows are
+   flipped, so the rails pair up. */
+.substrate-rows {
+  background-image: repeating-linear-gradient(
+    180deg,
+    #ece9f509 0 1px,
+    transparent 1px 13px,
+    #ece9f504 13px 14px,
+    transparent 14px 28px
+  );
+}
+
+/* hairline = simulated / scaled-down; solid = measured on go1.26.2 */
+.fidelity-sim { border-style: dashed !important; }
+
+/* range inputs: a machined slider */
+.dial::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 2px;
+  background: var(--color-ink); border: 2px solid var(--color-copper);
+  cursor: grab;
+}
+.dial::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 2px;
+  background: var(--color-ink); border: 2px solid var(--color-copper);
+}

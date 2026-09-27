@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Go Machine</title>
+<meta name="description" content="An interactive control room for the Go compiler and runtime.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <div class="brand">
+    <div class="brand-mark">go</div>
+    <div>
+      <div class="brand-name">The Go Machine</div>
+      <div class="brand-sub">compiler &amp; runtime</div>
+    </div>
+  </div>
+
+  <header class="head">
+    <div class="head-title">
+      <span class="t" id="modTitle">GMP scheduler</span>
+      <span class="s" id="modSub">How goroutines get onto threads</span>
+    </div>
+    <div class="transport">
+      <button class="btn btn-icon" id="btnPlay" aria-pressed="true" title="Play / pause the simulation">
+        <span id="playGlyph">❙❙</span>
+      </button>
+      <button class="btn sm" id="btnStep" title="Advance one tick">Step</button>
+      <div class="ctl">
+        <label for="speed">Speed</label>
+        <input type="range" id="speed" min="1" max="10" value="5" aria-label="Simulation speed">
+        <output id="speedOut">1.0×</output>
+      </div>
+      <button class="btn btn-icon" id="btnTheme" title="Switch light / dark">◐</button>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Subsystems">
+    <div class="rail-group">
+      <h4>Data structures</h4>
+      <button class="rail-btn" data-mod="slices"><span class="n">01</span><span class="l">Arrays &amp; slices</span></button>
+      <button class="rail-btn" data-mod="maps"><span class="n">02</span><span class="l">Maps</span></button>
+      <button class="rail-btn" data-mod="strings"><span class="n">03</span><span class="l">Strings &amp; runes</span></button>
+      <button class="rail-btn" data-mod="structs"><span class="n">04</span><span class="l">Struct layout</span></button>
+    </div>
+    <div class="rail-group">
+      <h4>Compile time</h4>
+      <button class="rail-btn" data-mod="pipeline"><span class="n">05</span><span class="l">Compiler pipeline</span></button>
+      <button class="rail-btn" data-mod="escape"><span class="n">06</span><span class="l">Escape analysis</span></button>
+      <button class="rail-btn" data-mod="iface"><span class="n">07</span><span class="l">Interfaces &amp; itabs</span></button>
+    </div>
+    <div class="rail-group">
+      <h4>Run time</h4>
+      <button class="rail-btn" data-mod="sched"><span class="n">08</span><span class="l">GMP scheduler</span></button>
+      <button class="rail-btn" data-mod="stack"><span class="n">09</span><span class="l">Goroutines &amp; stacks</span></button>
+      <button class="rail-btn" data-mod="defer"><span class="n">10</span><span class="l">defer · panic · recover</span></button>
+    </div>
+    <div class="rail-group">
+      <h4>Communication</h4>
+      <button class="rail-btn" data-mod="chan"><span class="n">11</span><span class="l">Channels &amp; select</span></button>
+    </div>
+    <div class="rail-group">
+      <h4>Memory</h4>
+      <button class="rail-btn" data-mod="alloc"><span class="n">12</span><span class="l">Allocator</span></button>
+      <button class="rail-btn" data-mod="gc"><span class="n">13</span><span class="l">Garbage collector</span></button>
+    </div>
+    <p class="rail-foot">
+      Compiler output on these pages is real, captured from <code>go1.26.2</code> via
+      <code>-gcflags=-m -S</code> and <code>GOSSAFUNC</code>. Runtime traces follow the
+      <code>GODEBUG=schedtrace,gctrace</code> formats.
+    </p>
+  </nav>
+
+  <main class="stage" id="stage">
+
+    <!-- ══════════════ 01 · ARRAYS & SLICES ══════════════ -->
+    <section class="panel" data-mod="slices" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-sl="append">append(s, n)</button>
+          <button class="btn sm" data-sl="alias">t := s[1:3]</button>
+          <button class="btn sm" data-sl="aliascap">t := s[1:3:3]</button>
+          <button class="btn sm" data-sl="appendt">append(t, 99)</button>
+          <button class="btn sm" data-sl="copy">copy(t, s)</button>
+          <button class="btn sm ghost" data-sl="reset">Reset</button>
+        </div>
+
+        <figure class="pane">
+          <figcaption>Backing array <span class="pane-tag" id="slArrTag"></span></figcaption>
+          <div class="arrwrap">
+            <div class="arrcells" id="slCells"></div>
+            <div class="arrbars" id="slBars"></div>
+          </div>
+        </figure>
+
+        <div class="split">
+          <figure class="pane">
+            <figcaption>Slice headers <span class="pane-tag">24 bytes each</span></figcaption>
+            <div class="headers" id="slHeaders"></div>
+          </figure>
+          <figure class="pane">
+            <figcaption>What just happened</figcaption>
+            <div class="evbox" id="slEvent"></div>
+          </figure>
+        </div>
+
+        <figure class="pane">
+          <figcaption>append growth <span class="pane-tag">measured on go1.26.2</span></figcaption>
+          <div class="growth" id="slGrowth"></div>
+        </figure>
+      </div>
+      <aside class="notes">
+        <h3>An array is a value. A slice is a view.</h3>
+        <p><code>[5]int</code> <em>is</em> forty bytes of data — assign it and you copy all of it.
+        <code>[]int</code> is a 24-byte header: a pointer, a length, and a capacity. Assign that and
+        you copy the header, and both copies point at the same array.</p>
+        <p>Almost every slice surprise follows from that one fact. <code>append</code> writes into
+        the backing array when there is capacity spare, and allocates a fresh one when there is not
+        &mdash; so whether two slices stay connected depends on a number you usually are not looking at.</p>
+        <div class="callout">
+          <h5>The three-index fix</h5>
+          <p><code>s[1:3:3]</code> sets the capacity as well as the bounds. Now
+          <code>len == cap</code>, so the very next <code>append</code> is forced to allocate
+          instead of writing into someone else's memory. This is what you want whenever you hand a
+          sub-slice to code you do not control.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Runtime</span><code>runtime/slice.go · growslice</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 02 · MAPS ══════════════ -->
+    <section class="panel" data-mod="maps" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-mp="insert">Insert a key</button>
+          <button class="btn sm" data-mp="insert5">Insert 5</button>
+          <button class="btn sm" data-mp="lookup">Look one up</button>
+          <button class="btn sm" data-mp="delete">Delete one</button>
+          <button class="btn sm ghost" data-mp="reset">Reset</button>
+        </div>
+        <div class="mapboard" id="mapBoard"></div>
+        <div class="split">
+          <figure class="pane">
+            <figcaption>The probe <span class="pane-tag">8 slots at once, branch-free</span></figcaption>
+            <pre class="code small" id="mapProbe"></pre>
+          </figure>
+          <figure class="pane">
+            <figcaption>What just happened</figcaption>
+            <div class="evbox" id="mapEvent"></div>
+          </figure>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Swiss tables</h3>
+        <p>Go 1.24 replaced the old bucket-and-overflow-chain map with a <strong>Swiss table</strong>.
+        Slots are grouped 8 at a time, and each group carries a <em>control word</em>: one byte per
+        slot holding either &ldquo;empty&rdquo;, &ldquo;deleted&rdquo;, or the top 7 bits of that
+        slot's hash.</p>
+        <p>Those 8 control bytes pack into a single <code>uint64</code>. So the lookup compares your
+        hash against all 8 slots with a handful of integer operations and no branches at all &mdash;
+        then only touches actual keys for slots that already matched.</p>
+        <div class="callout">
+          <h5>Why iteration order is random</h5>
+          <p>It is deliberate. The runtime starts each range at a random group and a random slot, so
+          you cannot come to depend on an order that was never guaranteed. Sort the keys if you need
+          determinism.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>internal/runtime/maps</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 03 · STRINGS & RUNES ══════════════ -->
+    <section class="panel" data-mod="strings" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-st="index">s[1]</button>
+          <button class="btn sm" data-st="range">for i, r := range s</button>
+          <button class="btn sm" data-st="bytes">[]byte(s)</button>
+          <button class="btn sm" data-st="runes">[]rune(s)</button>
+          <button class="btn sm ghost" data-st="reset">Reset</button>
+        </div>
+        <figure class="pane">
+          <figcaption>s := "héllo, 世界" <span class="pane-tag" id="strTag">14 bytes · 9 runes</span></figcaption>
+          <div class="strwrap">
+            <div class="strbytes" id="strBytes"></div>
+            <div class="strrunes" id="strRunes"></div>
+          </div>
+        </figure>
+        <div class="split">
+          <figure class="pane">
+            <figcaption>String header <span class="pane-tag">16 bytes</span></figcaption>
+            <div class="headers" id="strHeader"></div>
+          </figure>
+          <figure class="pane">
+            <figcaption>What just happened</figcaption>
+            <div class="evbox" id="strEvent"></div>
+          </figure>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Bytes, with a promise</h3>
+        <p>A string is a pointer and a length, and the bytes it points at are <strong>immutable</strong>.
+        That is what makes strings cheap to pass around and safe to share: slicing one is just
+        another header over the same memory, with no copy and no allocation.</p>
+        <p>Immutability is also why <code>[]byte(s)</code> has to allocate. The runtime cannot hand
+        out a mutable view of memory it has promised nobody will change.</p>
+        <div class="callout">
+          <h5>len is not length</h5>
+          <p><code>len(s)</code> counts <em>bytes</em>. Indexing gives you a byte. Only
+          <code>range</code> decodes UTF-8 and yields runes &mdash; which is why its index jumps
+          from 8 straight to 11 across a three-byte character.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Runtime</span><code>runtime/string.go</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 04 · STRUCT LAYOUT ══════════════ -->
+    <section class="panel" data-mod="structs" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <div class="seg" id="structSeg" role="tablist"></div>
+          <button class="btn sm" data-sx2="sort">Sort by size</button>
+          <button class="btn sm ghost" data-sx2="reset">Reset</button>
+        </div>
+        <figure class="pane">
+          <figcaption>Memory layout <span class="pane-tag" id="structTag"></span></figcaption>
+          <div class="memlayout" id="structLayout"></div>
+        </figure>
+        <div class="split">
+          <figure class="pane">
+            <figcaption>Source</figcaption>
+            <pre class="code" id="structSrc"></pre>
+          </figure>
+          <figure class="pane">
+            <figcaption>unsafe.Sizeof / Offsetof <span class="pane-tag">real values</span></figcaption>
+            <div class="evbox" id="structEvent"></div>
+          </figure>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Alignment costs bytes</h3>
+        <p>Every type has an alignment, and a field's offset must be a multiple of it. An
+        <code>int64</code> has to start on an 8-byte boundary, so a <code>bool</code> sitting just
+        before one leaves seven bytes of nothing behind it.</p>
+        <p>The compiler <strong>never reorders your fields</strong> &mdash; Go guarantees the layout
+        you wrote. Which means the padding is yours to fix, and the fix is free: declaring the same
+        fields largest-first can cut the struct by a third with no change in behaviour.</p>
+        <div class="callout">
+          <h5>When it actually matters</h5>
+          <p>For one struct, never. For a slice of a million of them, 24 bytes versus 16 is 8 MB of
+          memory and a third more cache lines touched on every pass. <code>go vet</code> does not
+          check this; <code>fieldalignment</code> in <code>go tool</code>'s analysis suite does.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Spec</span><code>unsafe.Sizeof · Alignof · Offsetof</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 05 · COMPILER PIPELINE ══════════════ -->
+    <section class="panel" data-mod="pipeline" hidden>
+      <div class="board">
+        <ol class="phases" id="phases" aria-label="Compiler phases"></ol>
+        <div class="split">
+          <figure class="pane">
+            <figcaption>Input <span class="pane-tag" id="pipeInTag">sum.go</span></figcaption>
+            <pre class="code" id="pipeSource"></pre>
+          </figure>
+          <figure class="pane">
+            <figcaption>After this phase <span class="pane-tag" id="pipeOutTag"></span></figcaption>
+            <pre class="code scroll" id="pipeOut"></pre>
+          </figure>
+        </div>
+        <div class="metrics" id="pipeMetrics"></div>
+      </div>
+      <aside class="notes">
+        <h3 id="pipeNoteTitle">Scanner</h3>
+        <p id="pipeNoteBody"></p>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code id="pipePkg">cmd/compile/internal/syntax</code></div>
+        </div>
+        <div class="callout">
+          <h5>Why it matters</h5>
+          <p id="pipeWhy"></p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 02 · ESCAPE ANALYSIS ══════════════ -->
+    <section class="panel" data-mod="escape" hidden>
+      <div class="board">
+        <div class="seg" id="escPick" role="tablist" aria-label="Example"></div>
+        <div class="split">
+          <figure class="pane">
+            <figcaption>Source</figcaption>
+            <pre class="code" id="escSource"></pre>
+          </figure>
+          <figure class="pane">
+            <figcaption>go build -gcflags='-m -m' <span class="pane-tag">real output</span></figcaption>
+            <pre class="code scroll small" id="escOut"></pre>
+          </figure>
+        </div>
+        <div class="escv">
+          <div class="escv-col" id="escStack">
+            <h5>Goroutine stack <span class="mono dim">free, dies at return</span></h5>
+            <div class="escv-slot" id="escStackSlot"></div>
+          </div>
+          <div class="escv-arrow" id="escArrow" aria-hidden="true">→</div>
+          <div class="escv-col" id="escHeap">
+            <h5>Heap <span class="mono dim">costs a GC scan</span></h5>
+            <div class="escv-slot" id="escHeapSlot"></div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Where does it live?</h3>
+        <p>Go has no <code>new</code>/<code>delete</code> distinction you control. The compiler decides
+        stack or heap by asking one question: <em>can a pointer to this value outlive the frame that made it?</em></p>
+        <p>It builds a directed graph of pointer flows and looks for a path from a value to a
+        location that outlives the function &mdash; a return value, a global, a heap object, or a
+        parameter of an un-inlined call. Reachable means <span class="tok-heap">heap</span>.</p>
+        <div class="callout">
+          <h5>The payoff</h5>
+          <p>Stack allocation is a pointer bump and a free unwind. Heap allocation costs an
+          <code>mcache</code> lookup now and GC marking later. This is why Go can feel like a
+          value language despite pointers being everywhere.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>cmd/compile/internal/escape</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 03 · INTERFACES ══════════════ -->
+    <section class="panel" data-mod="iface" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-ifx="assign">Assign Rect to Shape</button>
+          <button class="btn sm" data-ifx="call">Call s.Area()</button>
+          <button class="btn sm" data-ifx="assert">Type-assert s.(Rect)</button>
+          <button class="btn sm" data-ifx="devirt">Devirtualize</button>
+          <button class="btn sm ghost" data-ifx="reset">Reset</button>
+        </div>
+        <div id="ifaceBoard" class="ifb"></div>
+        <pre class="code small" id="ifaceCode"></pre>
+      </div>
+      <aside class="notes">
+        <h3>Two words, always</h3>
+        <p>An interface value is exactly two pointers wide. <code>eface</code> (the empty interface)
+        holds a type descriptor and a data pointer. <code>iface</code> holds an <em>itab</em> and a data pointer.</p>
+        <p>The itab is the join of an interface type and a concrete type: it caches the method
+        addresses in a flat array, so a dynamic call is a load and an indirect <code>CALL</code> &mdash;
+        not a hash lookup.</p>
+        <div class="callout">
+          <h5>The allocation nobody expects</h5>
+          <p>The data word is a <em>pointer</em>. Putting a value bigger than one word into an
+          interface must box it on the heap. <code>var s Shape = Rect{3,4}</code> allocates 16 bytes
+          unless the compiler can prove it escapes nowhere.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Struct</span><code>runtime.iface / runtime.itab</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 04 · SCHEDULER ══════════════ -->
+    <section class="panel" data-mod="sched" hidden>
+      <div class="board board-flush">
+        <div class="toolbar">
+          <button class="btn sm" data-sx="go1">go f()</button>
+          <button class="btn sm" data-sx="go20">Spawn 20</button>
+          <button class="btn sm" data-sx="block">Block on channel</button>
+          <button class="btn sm" data-sx="syscall">Enter syscall</button>
+          <button class="btn sm" data-sx="hog">CPU hog (10ms)</button>
+          <button class="btn sm ghost" data-sx="reset">Reset</button>
+          <div class="ctl" style="margin-left:auto">
+            <label for="gomaxprocs">GOMAXPROCS</label>
+            <input type="range" id="gomaxprocs" min="1" max="8" value="4">
+            <output id="gmpOut">4</output>
+          </div>
+        </div>
+        <div class="schedboard" id="schedBoard"></div>
+        <div class="legend" id="schedLegend"></div>
+      </div>
+      <aside class="notes">
+        <h3>G, M, P</h3>
+        <p><strong class="g-g">G</strong> is a goroutine: a stack plus saved registers. Cheap &mdash; 2 KB to start.<br>
+        <strong class="g-m">M</strong> is an OS thread. Expensive, and blocked by syscalls.<br>
+        <strong class="g-p">P</strong> is the right to run Go code. There are exactly <code>GOMAXPROCS</code> of them.</p>
+        <p>P is the piece people miss. It is the scheduling context that owns a run queue and an
+        <code>mcache</code>. An M must hold a P to execute Go &mdash; so P is the throttle that keeps
+        parallelism at <code>GOMAXPROCS</code> even when thread count spikes.</p>
+        <div class="callout">
+          <h5>Watch for</h5>
+          <p><strong>Work stealing.</strong> An idle P raids a random victim for half its queue.<br>
+          <strong>Handoff.</strong> A syscall detaches the P after ~20 µs so the other work keeps moving.<br>
+          <strong>The 61st tick.</strong> Every 61st schedule checks the global queue, so it can never starve.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>runtime/proc.go</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 05 · GOROUTINES & STACKS ══════════════ -->
+    <section class="panel" data-mod="stack" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-kx="call">Call deeper</button>
+          <button class="btn sm" data-kx="ret">Return</button>
+          <button class="btn sm" data-kx="shrink">GC stack shrink</button>
+          <button class="btn sm ghost" data-kx="reset">Reset</button>
+        </div>
+        <div class="stackwrap">
+          <div class="stacktower">
+            <div class="tower-head">
+              <span class="mono" id="stkSize">2 KB</span>
+              <span class="mono dim" id="stkUse">used 0 B</span>
+            </div>
+            <div class="tower" id="stkTower"></div>
+            <div class="tower-guard" id="stkGuard">stackguard0</div>
+          </div>
+          <div class="stackside">
+            <div id="stkEvent" class="stkevent"></div>
+            <figure class="pane">
+              <figcaption>Every non-leaf function starts with this</figcaption>
+              <pre class="code small" id="stkAsm"></pre>
+            </figure>
+            <div id="gstates"></div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Stacks that grow</h3>
+        <p>A goroutine starts with a 2 KB stack &mdash; which is why a million of them fit in memory.
+        It cannot be a fixed guard page, because it has to grow.</p>
+        <p>So the compiler opens every non-leaf function with a bounds check against
+        <code>g.stackguard0</code>, held in <code>R14</code> on amd64. Fail it and you land in
+        <code>morestack</code> → <code>newstack</code>: allocate double, copy the frames, and
+        <em>rewrite every pointer that aimed into the old stack</em>. Then re-run the call as if
+        nothing happened.</p>
+        <div class="callout">
+          <h5>The cost of moving</h5>
+          <p>Pointer adjustment is why Go stacks must be precisely typed and why
+          <code>uintptr</code> is dangerous: the runtime can find and fix a <code>*T</code>, but a
+          <code>uintptr</code> is just a number it will silently leave stale.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>runtime/stack.go</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 06 · DEFER / PANIC ══════════════ -->
+    <section class="panel" data-mod="defer" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-dx="run">Run</button>
+          <button class="btn sm" data-dx="panic">panic("boom")</button>
+          <button class="btn sm" data-dx="step">Step unwind</button>
+          <button class="btn sm ghost" data-dx="reset">Reset</button>
+        </div>
+        <div class="split">
+          <figure class="pane">
+            <figcaption>Source</figcaption>
+            <pre class="code" id="defSource"></pre>
+          </figure>
+          <figure class="pane">
+            <figcaption>Runtime state</figcaption>
+            <div class="defstate" id="defState"></div>
+          </figure>
+        </div>
+        <div class="defstrip" id="defStrip"></div>
+      </div>
+      <aside class="notes">
+        <h3>Three defers, three costs</h3>
+        <p><strong>Open-coded</strong> (Go 1.14+) is the fast path: when a function has at most 8
+        defers and none in a loop, the compiler drops the calls straight into the return path and
+        tracks which ones are live in an 8-bit register mask. Cost: near zero.</p>
+        <p><strong>Stack-allocated</strong> <code>_defer</code> records handle the rest of the
+        straight-line cases. <strong>Heap-allocated</strong> ones are for defers inside loops,
+        where the count is not known until runtime.</p>
+        <div class="callout">
+          <h5>How recover actually works</h5>
+          <p><code>recover()</code> is not magic control flow. It marks the current <code>_panic</code>
+          recovered and returns its argument. <code>gopanic</code> then calls <code>mcall(recovery)</code>,
+          which resets SP and PC to the deferring frame's return point &mdash; so the function returns
+          normally, having never finished its body.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>runtime/panic.go</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 07 · CHANNELS ══════════════ -->
+    <section class="panel" data-mod="chan" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-cx="send">Send</button>
+          <button class="btn sm" data-cx="recv">Receive</button>
+          <button class="btn sm" data-cx="close">close(ch)</button>
+          <button class="btn sm ghost" data-cx="reset">Reset</button>
+          <div class="ctl" style="margin-left:auto">
+            <label for="chcap">cap</label>
+            <input type="range" id="chcap" min="0" max="6" value="4">
+            <output id="chcapOut">4</output>
+          </div>
+        </div>
+        <div class="chanboard">
+          <div class="chan-side" id="chanSenders"></div>
+          <div class="chan-core">
+            <div class="hchan" id="hchanBox"></div>
+            <div class="ring" id="chanRing"></div>
+          </div>
+          <div class="chan-side" id="chanRecvers"></div>
+        </div>
+        <div class="handoff" id="chanHandoff"></div>
+      </div>
+      <aside class="notes">
+        <h3>A mutex, a ring, two queues</h3>
+        <p>A channel is a plain struct behind a lock: a ring buffer of <code>dataqsiz</code> slots,
+        a send index, a receive index, and two waiting lists of <code>sudog</code> &mdash; one
+        goroutine per blocked party.</p>
+        <p>The interesting part is what <em>doesn't</em> happen. On an unbuffered channel the value
+        never touches the buffer: <code>send</code> copies it straight from the sender's stack into
+        the receiver's, then marks the receiver runnable. One copy, no queue.</p>
+        <div class="callout">
+          <h5>select, precisely</h5>
+          <p><code>selectgo</code> shuffles a poll order with <code>cheaprand</code> (so no case is
+          favoured), locks every channel in address order (so no deadlock), then sweeps twice:
+          once looking for a ready case, and if none, parking the goroutine on <em>all</em> of
+          them at once.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>runtime/chan.go</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 08 · ALLOCATOR ══════════════ -->
+    <section class="panel" data-mod="alloc" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-ax="tiny">make([]byte, 8)</button>
+          <button class="btn sm" data-ax="small">make([]byte, 200)</button>
+          <button class="btn sm" data-ax="large">make([]byte, 64&lt;&lt;10)</button>
+          <button class="btn sm ghost" data-ax="reset">Reset</button>
+        </div>
+        <div class="allocflow" id="allocFlow"></div>
+        <div class="split">
+          <figure class="pane">
+            <figcaption>Size classes <span class="pane-tag">68 of them</span></figcaption>
+            <div class="sizeclasses" id="sizeClasses"></div>
+          </figure>
+          <figure class="pane">
+            <figcaption>Chosen span</figcaption>
+            <div class="spanview" id="spanView"></div>
+          </figure>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Three tiers, one lock avoided</h3>
+        <p>Go's allocator is a thread-caching allocator in the TCMalloc family, rebuilt around P.
+        Because the <code>mcache</code> hangs off the P and an M must hold a P to run Go code, the
+        common allocation path needs <em>no lock at all</em>.</p>
+        <p>Objects are rounded up to one of 68 size classes. That wastes a little memory (at most
+        12.5%) and buys a lot: every object in a span is the same size, so the sweeper can free by
+        clearing a bitmap instead of walking a list.</p>
+        <div class="callout">
+          <h5>The tiny allocator</h5>
+          <p>Pointer-free objects under 16 bytes get bump-packed into a shared 16-byte block.
+          A <code>bool</code>, a small struct, a one-rune string &mdash; many land in the same word
+          and cost nothing to sweep separately.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>runtime/malloc.go</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ══════════════ 09 · GC ══════════════ -->
+    <section class="panel" data-mod="gc" hidden>
+      <div class="board">
+        <div class="toolbar">
+          <button class="btn sm" data-gx="start">Trigger GC</button>
+          <button class="btn sm" data-gx="step">Step mark</button>
+          <button class="btn sm" data-gx="mutate">Mutator writes pointer</button>
+          <button class="btn sm ghost" data-gx="reset">Reset</button>
+          <div class="ctl" style="margin-left:auto">
+            <label for="gogc">GOGC</label>
+            <input type="range" id="gogc" min="25" max="400" step="25" value="100">
+            <output id="gogcOut">100</output>
+          </div>
+        </div>
+        <div class="gcphases" id="gcPhases"></div>
+        <div class="gcmain">
+          <div class="gcgraph" id="gcGraph"></div>
+          <div class="gcside">
+            <div class="gcpace" id="gcPace"></div>
+            <div class="gcwork" id="gcWork"></div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Tricolour, concurrent, no compaction</h3>
+        <p>Everything starts <span class="chip-w">white</span>. Roots go <span class="chip-g">grey</span>.
+        Scanning a grey object greys its children and turns it <span class="chip-b">black</span>.
+        When no grey remains, white is garbage.</p>
+        <p>The mutator is running the whole time, which breaks the invariant the moment a program
+        stores a white pointer into a black object. Go's <strong>hybrid write barrier</strong>
+        shades <em>both</em> the old value and the new one on every heap pointer write.</p>
+        <div class="callout">
+          <h5>Why the hybrid barrier mattered</h5>
+          <p>Shading the deleted pointer too means a goroutine's stack, once scanned, can never
+          again hold an unscanned pointer. That removed the stack re-scan from mark termination and
+          took stop-the-world pauses from tens of milliseconds to well under 100 µs.</p>
+        </div>
+        <div class="note-meta">
+          <div class="kv"><span>Package</span><code>runtime/mgc.go</code></div>
+        </div>
+      </aside>
+    </section>
+
+  </main>
+
+  <section class="trace" id="traceWrap">
+    <div class="trace-bar">
+      <span class="trace-title">Runtime trace</span>
+      <span class="trace-hint mono" id="traceHint">GODEBUG=schedtrace=120,gctrace=1</span>
+      <button class="btn sm ghost" id="btnClear">Clear</button>
+      <button class="btn sm ghost" id="btnTraceToggle" aria-expanded="true">Hide</button>
+    </div>
+    <pre class="trace-log" id="traceLog" aria-live="polite" aria-label="Runtime trace output"></pre>
+  </section>
+
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/data.js"></script>
+<script src="js/compile.js"></script>
+<script src="js/schedule.js"></script>
+<script src="js/memory.js"></script>
+<script>window.GoMachine.boot();</script>
+</body>
+</html>
